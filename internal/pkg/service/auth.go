@@ -85,15 +85,21 @@ func RefreshToken(refreshToken string) (string, error) {
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		if float64(time.Now().Unix()) > claims["exp"].(float64) {
-			return "", errors.New("refresh token expired")
+		email := claims["email"].(string)
+		newToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+			"email": email,
+			"exp":   time.Now().Add(time.Hour * 24).Unix(),
+		})
+
+		tokenString, err := newToken.SignedString(jwtKey)
+		if err != nil {
+			return "", err
 		}
 
-		email := claims["email"].(string)
-		return Login(email, "")
+		return tokenString, nil
+	} else {
+		return "", errors.New("invalid refresh token")
 	}
-
-	return "", errors.New("invalid refresh token")
 }
 
 func hashPassword(password string) (string, error) {
