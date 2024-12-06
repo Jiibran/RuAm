@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Frontend</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            margin-top: 0;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007BFF;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .message {
+            margin: 20px 0;
+            padding: 10px;
+            background: #e9ecef;
+            border: 1px solid #ced4da;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Register</h2>
+        <input type="text" id="registerEmail" placeholder="Email">
+        <input type="password" id="registerPassword" placeholder="Password">
+        <button onclick="register()">Register</button>
+
+        <h2>Login</h2>
+        <input type="text" id="loginEmail" placeholder="Email">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button onclick="login()">Login</button>
+
+        <h2>Refresh Token</h2>
+        <button onclick="refreshToken()">Refresh Token</button>
+
+        <h2>Home</h2>
+        <button onclick="getHome()">Get Home Message</button>
+        <div class="message" id="homeMessage"></div>
+    </div>
+
+    <script>
+        let token = '';
+        let refreshToken = '';
+
+        async function register() {
+            console.log('Register button clicked');
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+
+            const response = await fetch('/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+            console.log('Register response:', data);
+            alert(data.message || data.error);
+        }
+
+        async function login() {
+            console.log('Login button clicked');
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            const response = await fetch('/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+            console.log('Login response:', data);
+            if (data.token) {
+                token = data.token;
+                refreshToken = data.refresh_token;
+                alert('Login successful');
+            } else {
+                alert(data.error);
+            }
+        }
+
+        async function refreshToken() {
+            console.log('Refresh Token button clicked');
+            const response = await fetch('/auth/refresh_token', {
+                method: 'POST',
+                headers: {
+                    'Authorization': refreshToken
+                }
+            });
+
+            const data = await response.json();
+            console.log('Refresh Token response:', data);
+            if (data.token) {
+                token = data.token;
+                alert('Token refreshed');
+            } else {
+                alert(data.error);
+            }
+        }
+
+        async function getHome() {
+            console.log('Get Home button clicked');
+            const response = await fetch('/home', {
+                method: 'GET',
+                headers: {
+                    'Authorization': token
+                }
+            });
+
+            const data = await response.json();
+            console.log('Get Home response:', data);
+            if (data.message) {
+                document.getElementById('homeMessage').innerText = data.message;
+            } else {
+                alert(data.error);
+            }
+        }
+    </script>
+</body>
+</html>
